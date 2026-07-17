@@ -2,26 +2,48 @@
 
 import { useState, useEffect } from 'react';
 import { Lead } from '@/lib/types';
-import { Search, MapPin, Phone, Mail, Globe, Flame, RefreshCcw, LogOut } from 'lucide-react';
+import { Search, MapPin, Phone, Mail, Globe, Flame, RefreshCcw, LogOut, Camera } from 'lucide-react';
 import { logout } from '@/app/actions/auth';
 
 export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [query, setQuery] = useState('Doctors in Kozhikode');
+  const [source, setSource] = useState<'maps' | 'web'>('maps');
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
 
   const fetchLeads = async () => {
     setLoading(true);
+    setNextPageToken(null);
     try {
-      const res = await fetch(`/api/leads?query=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/leads?query=${encodeURIComponent(query)}&source=${source}`);
       const data = await res.json();
       if (data.success) {
         setLeads(data.leads);
+        setNextPageToken(data.nextPageToken || null);
       }
     } catch (err) {
       console.error('Failed to fetch leads', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMoreLeads = async () => {
+    if (!nextPageToken) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(`/api/leads?query=${encodeURIComponent(query)}&pageToken=${nextPageToken}&source=${source}`);
+      const data = await res.json();
+      if (data.success) {
+        setLeads(prev => [...prev, ...data.leads]);
+        setNextPageToken(data.nextPageToken || null);
+      }
+    } catch (err) {
+      console.error('Failed to fetch more leads', err);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -37,6 +59,14 @@ export default function Dashboard() {
           <p className="text-sm text-gray-500 mt-1">Discover, evaluate, and acquire high-quality business leads.</p>
         </div>
         <div className="flex gap-4">
+          <select 
+            value={source} 
+            onChange={(e) => setSource(e.target.value as 'maps' | 'web')}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-sm"
+          >
+            <option value="maps">Google Maps</option>
+            <option value="web">Google Search</option>
+          </select>
           <input 
             type="text" 
             value={query}
@@ -110,6 +140,11 @@ export default function Dashboard() {
                     <div className="flex flex-col gap-1 text-sm">
                       {lead.phone && <span className="flex items-center gap-2 text-gray-600"><Phone className="w-3 h-3"/> {lead.phone}</span>}
                       {lead.email && <span className="flex items-center gap-2 text-gray-600"><Mail className="w-3 h-3"/> {lead.email}</span>}
+                      {lead.instagram && (
+                        <a href={lead.instagram} target="_blank" className="flex items-center gap-2 text-pink-600 hover:underline">
+                          <Camera className="w-3 h-3"/> Find on Instagram
+                        </a>
+                      )}
                     </div>
                   </td>
                   <td className="py-4 px-6 text-sm">
@@ -150,6 +185,19 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+
+        {nextPageToken && (
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={loadMoreLeads}
+              disabled={loadingMore}
+              className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-xl font-medium shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50"
+            >
+              {loadingMore ? <RefreshCcw className="w-5 h-5 animate-spin text-gray-500" /> : null}
+              {loadingMore ? 'Loading...' : 'Load More Leads'}
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );
