@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Lead } from '@/lib/types';
-import { Search, MapPin, Phone, Mail, Globe, Flame, RefreshCcw } from 'lucide-react';
+import { Search, MapPin, Phone, Mail, Globe, Flame, RefreshCcw, LogOut } from 'lucide-react';
+import { logout } from '@/app/actions/auth';
 
 export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -50,6 +51,13 @@ export default function Dashboard() {
           >
             {loading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             Discover Leads
+          </button>
+          <button 
+            onClick={() => logout()}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors border border-gray-300"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
           </button>
         </div>
       </header>
