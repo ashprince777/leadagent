@@ -36,15 +36,22 @@ async function discoverLeads(query: string): Promise<Lead[]> {
   const queryLower = query.toLowerCase();
   const isDoctorSearch = queryLower.includes('doctor') || queryLower.includes('clinic');
   const isHospitalSearch = queryLower.includes('hospital');
+  const isCollegeSearch = queryLower.includes('college');
 
   const filteredResults = topResults.filter((place: any) => {
     const nameLower = (place.displayName?.text || '').toLowerCase();
     const typeLower = (place.primaryTypeDisplayName?.text || '').toLowerCase();
+    
     const isHospital = nameLower.includes('hospital') || typeLower.includes('hospital');
+    const isCollege = nameLower.includes('college') || typeLower.includes('college') || typeLower.includes('education');
     
     if (isDoctorSearch && !isHospitalSearch && isHospital) {
       return false; // Skip hospitals
     }
+    if (isDoctorSearch && !isCollegeSearch && isCollege) {
+      return false; // Skip colleges
+    }
+    
     return true;
   });
 
