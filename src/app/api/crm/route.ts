@@ -87,6 +87,7 @@ export async function GET(req: Request) {
           id: 'assigned-tasks',
           name: '🎯 Assigned by Admin',
           createdAt: new Date().toISOString(),
+          userEmail: 'admin',
           leads: assignedLeads.map(formatLead)
         });
       }
