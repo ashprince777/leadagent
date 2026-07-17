@@ -32,9 +32,10 @@ async function discoverLeads(query: string): Promise<Lead[]> {
   // Process all returned places (usually up to 20 by default)
   const topResults = searchData.places;
 
-  // Smart filtering: If the user searches for doctors/clinics, filter out big hospitals.
+  // Smart filtering
   const queryLower = query.toLowerCase();
-  const isDoctorSearch = queryLower.includes('doctor') || queryLower.includes('clinic');
+  const isDoctorSearch = queryLower.includes('doctor');
+  const isClinicSearch = queryLower.includes('clinic');
   const isHospitalSearch = queryLower.includes('hospital');
   const isCollegeSearch = queryLower.includes('college');
 
@@ -44,12 +45,16 @@ async function discoverLeads(query: string): Promise<Lead[]> {
     
     const isHospital = nameLower.includes('hospital') || typeLower.includes('hospital');
     const isCollege = nameLower.includes('college') || typeLower.includes('college') || typeLower.includes('education');
+    const isClinic = nameLower.includes('clinic') || typeLower.includes('clinic');
     
     if (isDoctorSearch && !isHospitalSearch && isHospital) {
       return false; // Skip hospitals
     }
     if (isDoctorSearch && !isCollegeSearch && isCollege) {
       return false; // Skip colleges
+    }
+    if (isDoctorSearch && !isClinicSearch && isClinic) {
+      return false; // Skip clinics
     }
     
     return true;
