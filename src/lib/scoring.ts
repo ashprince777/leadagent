@@ -64,3 +64,64 @@ export function calculateLeadScore(lead: Partial<Lead>): { score: number; recomm
     isHotLead
   };
 }
+
+export async function evaluateLeadsWithGroq(leads: Partial<Lead>[]): Promise<{id: string, score: number, recommendedService: string, reason: string, isHotLead: boolean}[]> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return leads.map(l => ({ id: l.id!, ...calculateLeadScore(l) }));
+
+  const simplifiedLeads = leads.map(l => ({
+    id: l.id,
+    businessName: l.businessName,
+    website: l.website,
+    hasWebsite: l.websiteStatus === 'Active',
+    category: l.category
+  }));
+
+  const systemPrompt = `You are an expert digital marketing lead evaluator. You are given a list of local businesses.
+You need to evaluate their digital presence and output a JSON array of evaluations.
+Return a JSON object in this exact format:
+{
+  "evaluations": [
+    {
+      "id": "lead-id-here",
+      "score": <number 0-100, higher if they desperately need a website or marketing>,
+      "recommendedService": "<Service like 'Website Development', 'SEO Optimization', etc>",
+      "reason": "<Short reason why>",
+      "isHotLead": <true if score > 80>
+    }
+  ]
+}
+Critically, evaluate EVERY lead in the list.`;
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        response_format: { type: "json_object" },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: JSON.stringify({ leads: simplifiedLeads }) }
+        ],
+        temperature: 0.1
+      })
+    });
+    
+    const data = await response.json();
+    if (data.choices && data.choices[0]) {
+      const parsed = JSON.parse(data.choices[0].message.content);
+      if (parsed.evaluations && Array.isArray(parsed.evaluations)) {
+        return parsed.evaluations;
+      }
+    }
+  } catch (error) {
+    console.error("Groq evaluation failed", error);
+  }
+  
+  // Fallback
+  return leads.map(l => ({ id: l.id!, ...calculateLeadScore(l) }));
+}

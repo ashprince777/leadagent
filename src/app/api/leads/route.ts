@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { calculateLeadScore } from '@/lib/scoring';
+import { calculateLeadScore, evaluateLeadsWithGroq } from '@/lib/scoring';
 import { Lead } from '@/lib/types';
 
 async function discoverLeads(query: string, pageToken?: string | null): Promise<{leads: Lead[], nextPageToken?: string}> {
@@ -81,8 +81,10 @@ async function discoverLeads(query: string, pageToken?: string | null): Promise<
     });
   }
 
+  const aiEvaluations = await evaluateLeadsWithGroq(rawLeads);
+
   const finalLeads = rawLeads.map(raw => {
-    const evaluation = calculateLeadScore(raw);
+    const evaluation = aiEvaluations.find(e => e.id === raw.id) || calculateLeadScore(raw);
     return {
       ...raw,
       leadScore: evaluation.score,
@@ -96,25 +98,33 @@ async function discoverLeads(query: string, pageToken?: string | null): Promise<
   return { leads: finalLeads, nextPageToken: searchData.nextPageToken };
 }
 
-async function searchGoogleWeb(query: string, startIndex: number = 1): Promise<{leads: Lead[], nextPageToken?: string}> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  const cx = process.env.GOOGLE_SEARCH_ENGINE_ID;
+async function searchSerperWeb(query: string, page: number = 1): Promise<{leads: Lead[], nextPageToken?: string}> {
+  const apiKey = process.env.SERPER_API_KEY;
   
-  if (!apiKey || !cx) {
-    throw new Error('Google Search API key or CX is missing.');
+  if (!apiKey) {
+    throw new Error('Serper API key is missing.');
   }
 
-  const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}&start=${startIndex}`;
-  const response = await fetch(url);
+  const response = await fetch('https://google.serper.dev/search', {
+    method: 'POST',
+    headers: {
+      'X-API-KEY': apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      q: query,
+      page: page
+    })
+  });
   const data = await response.json();
 
-  if (!data.items) {
+  if (!data.organic || data.organic.length === 0) {
     return { leads: [] };
   }
 
-  const rawLeads: Partial<Lead>[] = data.items.map((item: any, index: number) => {
+  const rawLeads: Partial<Lead>[] = data.organic.map((item: any, index: number) => {
     return {
-      id: `web-${startIndex + index}`,
+      id: `web-${page}-${index}`,
       businessName: item.title,
       category: 'Web Search Result',
       location: 'Online / Unknown',
@@ -129,8 +139,10 @@ async function searchGoogleWeb(query: string, startIndex: number = 1): Promise<{
     };
   });
 
+  const aiEvaluations = await evaluateLeadsWithGroq(rawLeads);
+
   const finalLeads = rawLeads.map(raw => {
-    const evaluation = calculateLeadScore(raw);
+    const evaluation = aiEvaluations.find(e => e.id === raw.id) || calculateLeadScore(raw);
     return {
       ...raw,
       leadScore: evaluation.score,
@@ -141,9 +153,7 @@ async function searchGoogleWeb(query: string, startIndex: number = 1): Promise<{
     } as Lead;
   });
 
-  const nextIndex = startIndex + 10;
-  // Google Custom Search only allows up to 100 results
-  const nextPageToken = nextIndex <= 100 && data.queries?.nextPage ? String(nextIndex) : undefined;
+  const nextPageToken = data.organic.length > 0 && page < 10 ? String(page + 1) : undefined;
 
   return { leads: finalLeads, nextPageToken };
 }
@@ -157,7 +167,7 @@ export async function GET(request: Request) {
   try {
     let result;
     if (source === 'web') {
-      result = await searchGoogleWeb(query, pageToken ? parseInt(pageToken, 10) : 1);
+      result = await searchSerperWeb(query, pageToken ? parseInt(pageToken, 10) : 1);
     } else {
       result = await discoverLeads(query, pageToken);
     }
