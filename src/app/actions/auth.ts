@@ -28,7 +28,9 @@ function getClient() {
   });
 }
 
-export async function login(prevState: any, formData: FormData) {
+export type AuthState = { error?: string; success?: string } | null | undefined;
+
+export async function login(prevState: any, formData: FormData): Promise<AuthState> {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -65,7 +67,7 @@ export async function login(prevState: any, formData: FormData) {
   if (success) redirect('/');
 }
 
-export async function signup(prevState: any, formData: FormData) {
+export async function signup(prevState: any, formData: FormData): Promise<AuthState> {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
