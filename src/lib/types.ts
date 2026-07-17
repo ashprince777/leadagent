@@ -1,3 +1,10 @@
+export interface WebsiteAnalysis {
+  hasWordPress: boolean;
+  hasGoogleAds: boolean;
+  hasFacebookPixel: boolean;
+  aiSummary: string;
+}
+
 export interface Lead {
   id?: string;
   businessName: string;
@@ -16,4 +23,17 @@ export interface Lead {
   reasonSelected: string;
   isHotLead: boolean;
   createdAt?: string;
+  pipelineStatus?: 'New' | 'Contacted' | 'Hot Lead' | 'Cold Lead';
+  followUpDate?: string;
+  assignedTo?: string;
+  callNotes?: string;
+  websiteAnalysis?: WebsiteAnalysis;
+}
+
+export interface LeadList {
+  id: string;
+  name: string;
+  createdAt: string;
+  userEmail?: string;
+  leads: Lead[];
 }
