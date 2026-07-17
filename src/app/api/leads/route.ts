@@ -32,9 +32,25 @@ async function discoverLeads(query: string): Promise<Lead[]> {
   // Process all returned places (usually up to 20 by default)
   const topResults = searchData.places;
 
+  // Smart filtering: If the user searches for doctors/clinics, filter out big hospitals.
+  const queryLower = query.toLowerCase();
+  const isDoctorSearch = queryLower.includes('doctor') || queryLower.includes('clinic');
+  const isHospitalSearch = queryLower.includes('hospital');
+
+  const filteredResults = topResults.filter((place: any) => {
+    const nameLower = (place.displayName?.text || '').toLowerCase();
+    const typeLower = (place.primaryTypeDisplayName?.text || '').toLowerCase();
+    const isHospital = nameLower.includes('hospital') || typeLower.includes('hospital');
+    
+    if (isDoctorSearch && !isHospitalSearch && isHospital) {
+      return false; // Skip hospitals
+    }
+    return true;
+  });
+
   const rawLeads: Partial<Lead>[] = [];
 
-  for (const place of topResults) {
+  for (const place of filteredResults) {
     const hasWebsite = !!place.websiteUri;
     
     rawLeads.push({
