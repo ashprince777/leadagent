@@ -404,10 +404,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-24">
-      <header className="bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Foxora Lead Gen AI</h1>
-          <div className="flex gap-4 mt-3">
+      <header className="bg-white border-b border-gray-200 px-4 py-4 md:px-8 md:py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 w-full">
+        <div className="w-full lg:w-auto">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">Foxora Lead Gen AI</h1>
+          <div className="flex gap-4 mt-3 overflow-x-auto whitespace-nowrap pb-1 scrollbar-none max-w-full">
             <button 
               onClick={() => setActiveTab('search')} 
               className={`text-sm font-medium pb-1 border-b-2 transition-colors ${activeTab === 'search' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
@@ -446,13 +446,13 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-        <div className="flex gap-4 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto">
           {activeTab === 'search' && (
-            <>
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto">
               <select 
                 value={source} 
                 onChange={(e) => setSource(e.target.value as 'maps' | 'web')}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-sm"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-sm w-full sm:w-auto"
               >
                 <option value="maps">Google Maps</option>
                 <option value="web">Google Search</option>
@@ -461,35 +461,37 @@ export default function Dashboard() {
                 type="text" 
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none w-72"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none w-full sm:w-72 text-sm"
                 placeholder="e.g. Salons in Kochi"
                 onKeyDown={e => e.key === 'Enter' && fetchLeads()}
               />
               <button 
                 onClick={fetchLeads}
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 w-full sm:w-auto text-sm"
               >
                 {loading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                 Discover
               </button>
-            </>
+            </div>
           )}
-          {userEmail && <span className="text-sm text-gray-500 font-medium">Logged in as: {userEmail}</span>}
-          <button 
-            onClick={() => logout()}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors border border-gray-300 ml-4"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
+          <div className="flex items-center justify-between lg:justify-end gap-4 w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0 border-gray-150">
+            {userEmail && <span className="text-xs text-gray-500 font-medium truncate max-w-[200px]" title={userEmail}>Logged in as: {userEmail}</span>}
+            <button 
+              onClick={() => logout()}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors border border-gray-300 shrink-0"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="p-8 max-w-7xl mx-auto">
+      <main className="p-4 md:p-8 max-w-7xl mx-auto">
         {activeTab === 'search' && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                 <h3 className="text-gray-500 text-sm font-medium">Total Leads Found</h3>
                 <p className="text-3xl font-bold mt-2">{leads.length}</p>
@@ -509,78 +511,80 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden relative">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-sm text-gray-500">
-                    <th className="py-4 px-4 font-medium w-12 text-center">
-                      <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        checked={leads.length > 0 && selectedLeads.size === leads.length}
-                        onChange={toggleSelectAll}
-                      />
-                    </th>
-                    <th className="py-4 px-4 font-medium">Business</th>
-                    <th className="py-4 px-4 font-medium">Contact</th>
-                    <th className="py-4 px-4 font-medium">Digital Status</th>
-                    <th className="py-4 px-4 font-medium">Lead Score</th>
-                    <th className="py-4 px-4 font-medium">Recommended Service</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {leads.map((lead, i) => (
-                    <tr key={lead.id || i} className={`transition-colors ${selectedLeads.has(lead.id || '') ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}>
-                      <td className="py-4 px-4 text-center">
-                         <input 
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200 text-sm text-gray-500">
+                      <th className="py-4 px-4 font-medium w-12 text-center">
+                        <input 
                           type="checkbox" 
                           className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                          checked={selectedLeads.has(lead.id || '')}
-                          onChange={() => lead.id && toggleLeadSelection(lead.id)}
+                          checked={leads.length > 0 && selectedLeads.size === leads.length}
+                          onChange={toggleSelectAll}
                         />
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-gray-900">{lead.businessName}</span>
-                          {lead.isHotLead && <Flame className="w-4 h-4 text-orange-500" />}
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                          <MapPin className="w-3 h-3" /> {lead.location} • {lead.category}
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        {renderContactInfo(lead)}
-                      </td>
-                      <td className="py-4 px-4 text-sm">
-                        {renderDigitalStatus(lead)}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-full bg-gray-200 rounded-full h-2 max-w-[100px]">
-                            <div 
-                              className={`h-2 rounded-full ${lead.leadScore > 75 ? 'bg-green-500' : lead.leadScore > 50 ? 'bg-yellow-500' : 'bg-red-500'}`} 
-                              style={{ width: `${lead.leadScore}%` }}
-                            ></div>
+                      </th>
+                      <th className="py-4 px-4 font-medium">Business</th>
+                      <th className="py-4 px-4 font-medium">Contact</th>
+                      <th className="py-4 px-4 font-medium">Digital Status</th>
+                      <th className="py-4 px-4 font-medium">Lead Score</th>
+                      <th className="py-4 px-4 font-medium">Recommended Service</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {leads.map((lead, i) => (
+                      <tr key={lead.id || i} className={`transition-colors ${selectedLeads.has(lead.id || '') ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}>
+                        <td className="py-4 px-4 text-center">
+                           <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            checked={selectedLeads.has(lead.id || '')}
+                            onChange={() => lead.id && toggleLeadSelection(lead.id)}
+                          />
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-900">{lead.businessName}</span>
+                            {lead.isHotLead && <Flame className="w-4 h-4 text-orange-500" />}
                           </div>
-                          <span className="text-sm font-bold">{lead.leadScore}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {lead.recommendedService}
-                        </span>
-                        <p className="text-xs text-gray-500 mt-1">{lead.reasonSelected}</p>
-                      </td>
-                    </tr>
-                  ))}
-                  {leads.length === 0 && !loading && (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-gray-500">
-                        No leads found. Enter a query to start discovering!
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                            <MapPin className="w-3 h-3" /> {lead.location} • {lead.category}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          {renderContactInfo(lead)}
+                        </td>
+                        <td className="py-4 px-4 text-sm">
+                          {renderDigitalStatus(lead)}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-full bg-gray-200 rounded-full h-2 max-w-[100px]">
+                              <div 
+                                className={`h-2 rounded-full ${lead.leadScore > 75 ? 'bg-green-500' : lead.leadScore > 50 ? 'bg-yellow-500' : 'bg-red-500'}`} 
+                                style={{ width: `${lead.leadScore}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-bold">{lead.leadScore}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {lead.recommendedService}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">{lead.reasonSelected}</p>
+                        </td>
+                      </tr>
+                    ))}
+                    {leads.length === 0 && !loading && (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-gray-500">
+                          No leads found. Enter a query to start discovering!
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {nextPageToken && (
@@ -616,9 +620,9 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'crm' && (
-          <div className="flex gap-8 h-[calc(100vh-160px)]">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 min-h-[calc(100vh-200px)] md:h-[calc(100vh-160px)]">
             {/* CRM Sidebar */}
-            <div className="w-72 bg-white rounded-xl border border-gray-200 shadow-sm overflow-y-auto shrink-0 flex flex-col">
+            <div className="w-full md:w-72 bg-white rounded-xl border border-gray-200 shadow-sm md:overflow-y-auto shrink-0 flex flex-col h-fit md:h-full">
               <div className="p-4 border-b border-gray-100 font-bold text-gray-800">My Lead Lists</div>
               <div className="p-2 flex-1">
                 {savedLists.length === 0 ? (
@@ -651,10 +655,10 @@ export default function Dashboard() {
             </div>
 
             {/* CRM Main Area */}
-            <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+            <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[400px] md:min-h-0">
               {activeListId && savedLists.find(l => l.id === activeListId) ? (
                 <>
-                  <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                  <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
                         <h2 className="text-xl font-bold text-gray-900">{savedLists.find(l => l.id === activeListId)?.name}</h2>
@@ -668,7 +672,7 @@ export default function Dashboard() {
                     </div>
                     <button 
                       onClick={() => exportListToCSV(activeListId)}
-                      className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center gap-2 transition-colors"
+                      className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center gap-2 transition-colors w-full sm:w-auto justify-center"
                     >
                       <Download className="w-4 h-4"/>
                       Export to CSV
@@ -676,7 +680,7 @@ export default function Dashboard() {
                   </div>
                   <div className="overflow-auto flex-1 p-0">
                     <table className="w-full text-left border-collapse">
-                      <thead className="sticky top-0 bg-gray-50 shadow-sm">
+                      <thead className="sticky top-0 bg-gray-50 shadow-sm z-10">
                         <tr className="border-b border-gray-200 text-sm text-gray-500">
                           <th className="py-4 px-6 font-medium">Business</th>
                           <th className="py-4 px-6 font-medium">Contact Info</th>
@@ -748,7 +752,7 @@ export default function Dashboard() {
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
+                <div className="flex-1 flex flex-col items-center justify-center text-gray-500 p-6 text-center">
                   <List className="w-12 h-12 mb-4 text-gray-300" />
                   <p>Select a list from the sidebar to view your saved leads.</p>
                 </div>
@@ -758,7 +762,7 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'tasks' && (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-160px)]">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[400px] md:h-[calc(100vh-160px)]">
              <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Tasks for Today</h2>
